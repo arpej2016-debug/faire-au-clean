@@ -808,16 +808,42 @@
     if (!sessionStorage.getItem('visit_notified')) {
       sessionStorage.setItem('visit_notified', '1');
 
-      emailjs.send('service_faireauclean', 'template_thtdq6a', {
-        to_email : 'arpej2016@gmail.com',
-        date     : dateStr,
-        heure    : timeStr,
-        langue   : lang,
-        device   : device,
-        page     : window.location.href
-      }).catch(() => {
-        // Silencieux si EmailJS non configuré
-      });
+      fetch('https://ipapi.co/json/')
+        .then(r => r.json())
+        .then(geo => {
+          const ville = geo.city || 'Inconnue';
+          const pays  = geo.country_name || '';
+          const ip    = geo.ip || '';
+
+          return emailjs.send('service_faireauclean', 'template_thtdq6a', {
+            to_email : 'arpej2016@gmail.com',
+            date     : dateStr,
+            heure    : timeStr,
+            langue   : lang,
+            device   : device,
+            page     : window.location.href,
+            ville    : ville,
+            pays     : pays,
+            ip       : ip
+          });
+        })
+        .catch(() => {
+          // fallback si API HS
+          return emailjs.send('service_faireauclean', 'template_thtdq6a', {
+            to_email : 'arpej2016@gmail.com',
+            date     : dateStr,
+            heure    : timeStr,
+            langue   : lang,
+            device   : device,
+            page     : window.location.href,
+            ville    : 'Non détectée',
+            pays     : '',
+            ip       : ''
+          });
+        })
+        .catch(() => {
+          // silencieux si EmailJS échoue
+        });
     }
   })();
 
